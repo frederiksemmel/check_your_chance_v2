@@ -8,14 +8,21 @@
   import { tweened } from "svelte/motion";
   import { cubicInOut } from "svelte/easing";
 
-  let path_amount = tweened(750, {
+  let path_amount = tweened(1700, {
     duration: 2000,
     easing: cubicInOut,
   });
 
   $: path_percent = $path_amount / 3000;
   $: mask_offset = 3983.4 * (1 - path_percent);
-  $: text_offset = path_percent * 100;
+  $: text_offset = path_percent * 100 - 15;
+  $: text_path_rotate = 0;
+  $: text_path = visualize_amount($path_amount);
+
+  function visualize_amount(amount: number) {
+    let text = "CHF " + Math.round(amount);
+    return text;
+  }
 
   onMount(async () => {
     const gp = new GradientPath({
@@ -57,13 +64,22 @@
 >
 
 <main>
-  <button on:click={() => path_amount.set(0)}> 0% </button>
-  <button on:click={() => path_amount.set(750)}> 25% </button>
-  <button on:click={() => path_amount.set(1500)}> 50% </button>
-  <button on:click={() => path_amount.set(2250)}> 75% </button>
-  <button on:click={() => path_amount.set(3000)}> 100% </button>
+  <input
+    type="range"
+    style="width:500px"
+    on:input={(e) => {
+      path_amount.set(e.target.value * 1.0);
+    }}
+    min="0"
+    max="3000"
+  />
+  <div class="top-row">
   <div class="logo">
     <img src={logo} alt="CYC Logo" />
+  </div>
+  <div class="counter">
+    1000
+  </div>
   </div>
   <div class="track">
     <img src={trackBg} alt="Track Background" />
@@ -75,6 +91,7 @@
       fill="none"
       version="1.1"
       id="gradient-path-svg"
+      overflow="visible"
     >
       <defs>
         <mask
@@ -110,8 +127,8 @@
           />
         </defs>
         <text
-          x="-640px"
-          y="0"
+          x="0px"
+          y="0px"
           fill="#FFF"
           font-size="6em"
           font-family="Inter"
@@ -120,7 +137,9 @@
           baseline-shift="10px"
         >
           <textPath xlink:href="#testPath" startOffset="{text_offset}%">
-            CHF {Math.round($path_amount)}
+          <tspan >
+            {text_path}
+          </tspan>
           </textPath>
         </text>
       </svg>
@@ -142,11 +161,21 @@
     flex-direction: column;
     align-items: center;
   }
+  .top-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: stretch;
+    flex: 1;
+  }
   .logo {
     width: 100%;
   }
   .logo img {
     margin: 15px;
+  }
+  .counter {
+    margin: 0 100px;
   }
   .track {
     position: relative;
