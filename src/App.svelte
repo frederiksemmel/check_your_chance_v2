@@ -8,12 +8,12 @@
   import { tweened } from "svelte/motion";
   import { cubicInOut } from "svelte/easing";
 
-  let amount = tweened(1000, {
+  let path_amount = tweened(3000, {
     duration: 2000,
     easing: cubicInOut,
   });
 
-  $: path_percent = $amount / 3000;
+  $: path_percent = $path_amount / 3000;
   $: mask_offset = 3983.4 * (1 - path_percent);
   $: text_offset = path_percent * 100;
 
@@ -28,19 +28,19 @@
     gp.render({
       type: "path",
       fill: [
-        { color: "#C6FFDD", pos: 0 },
-        { color: "#FBD786", pos: 0.25 },
-        { color: "#F7797D", pos: 0.5 },
-        { color: "#6DD5ED", pos: 0.75 },
-        { color: "#C6FFDD", pos: 1 },
+        { color: "#F7797D", pos: 0 },
+        { color: "#6DD5ED", pos: 0.25 },
+        { color: "#C6FFDD", pos: 0.5 },
+        { color: "#FBD786", pos: 0.75 },
+        { color: "#F7797D", pos: 1 },
       ],
       width: 120,
       stroke: [
-        { color: "#C6FFDD", pos: 0 },
-        { color: "#FBD786", pos: 0.25 },
-        { color: "#F7797D", pos: 0.5 },
-        { color: "#6DD5ED", pos: 0.75 },
-        { color: "#C6FFDD", pos: 1 },
+        { color: "#F7797D", pos: 0 },
+        { color: "#6DD5ED", pos: 0.25 },
+        { color: "#C6FFDD", pos: 0.5 },
+        { color: "#FBD786", pos: 0.75 },
+        { color: "#F7797D", pos: 1 },
       ],
       strokeWidth: 2,
     });
@@ -48,11 +48,11 @@
 </script>
 
 <main>
-  <button on:click={() => amount.set(0)}> 0% </button>
-  <button on:click={() => amount.set(750)}> 25% </button>
-  <button on:click={() => amount.set(1500)}> 50% </button>
-  <button on:click={() => amount.set(2250)}> 75% </button>
-  <button on:click={() => amount.set(3000)}> 100% </button>
+  <button on:click={() => path_amount.set(0)}> 0% </button>
+  <button on:click={() => path_amount.set(750)}> 25% </button>
+  <button on:click={() => path_amount.set(1500)}> 50% </button>
+  <button on:click={() => path_amount.set(2250)}> 75% </button>
+  <button on:click={() => path_amount.set(3000)}> 100% </button>
   <div class="logo">
     <img src={logo} alt="CYC Logo" />
   </div>
@@ -91,7 +91,7 @@
           />
         </defs>
         <text
-          x="-650px"
+          x="-640px"
           y="0"
           fill="#FFF"
           font-size="6em"
@@ -101,11 +101,12 @@
           baseline-shift="10px"
         >
           <textPath xlink:href="#testPath" startOffset={text_offset}%>
-            CHF {Math.round($amount)}
+            CHF {Math.round($path_amount)}
           </textPath>
         </text>
       </svg>
     </div>
+
     <img src={checkpoints} alt="Track Checkpoints" />
     <div class="marks start">START</div>
     <div class="marks ziel">ZIEL</div>
