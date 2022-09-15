@@ -57,14 +57,14 @@
      showgrid="false"
      borderlayer="true"
      inkscape:zoom="0.5369257"
-     inkscape:cx="2629.7866"
-     inkscape:cy="323.13596"
-     inkscape:window-width="2556"
-     inkscape:window-height="1216"
+     inkscape:cx="418.12116"
+     inkscape:cy="322.20473"
+     inkscape:window-width="1916"
+     inkscape:window-height="911"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer3">
+     inkscape:current-layer="layer1">
     <inkscape:page
        x="0"
        y="0"
@@ -88,7 +88,10 @@
        y="0"
        width="1435"
        height="832.99994"
-       id="page14348" />
+       id="page14348"
+       inkscape:export-filename="mask_path.svg"
+       inkscape:export-xdpi="800"
+       inkscape:export-ydpi="800" />
   </sodipodi:namedview>
   <g
      inkscape:groupmode="layer"
@@ -107,7 +110,7 @@
        sodipodi:nodetypes="czzzscc"
        style="stroke:#ffffff;stroke-width:180;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
     <path
-       d="m 61,742.99995 1039,0 c 236.193,0 236.3465,-326.49995 0,-326.49995 -236.3465,0 -501.7394,3e-5 -734.99995,0 -233.26051,-3e-5 -238.67685,-326.5 0,-326.5 H 1379"
+       d="m 61,742.99995 h 1039 c 236.193,0 236.3465,-326.49995 0,-326.49995 -236.3465,0 -501.7394,3e-5 -734.99995,0 -233.26051,-3e-5 -238.67685,-326.499995 0,-326.499995 H 1379"
        stroke="#000000"
        stroke-opacity="0.22"
        stroke-width="9"
@@ -130,18 +133,6 @@
        id="path172-5"
        sodipodi:nodetypes="czzzscc"
        style="stroke:#ffffff;stroke-width:180;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       inkscape:export-filename="gradient.svg"
-       inkscape:export-xdpi="800"
-       inkscape:export-ydpi="800" />
-    <path
-       d="m 1445,742.99994 h 1100.0001 c 236.1929,0 236.3465,-326.49995 0,-326.49995 -236.3466,0 -501.7395,3e-5 -735.0001,0 -233.2605,-3e-5 -238.6768,-326.500002 0,-326.500002 h 583.8425 486.1576"
-       stroke="#000000"
-       stroke-opacity="0.22"
-       stroke-width="9"
-       stroke-dasharray="31, 31"
-       id="path172-5-9"
-       sodipodi:nodetypes="czzzscc"
-       style="stroke:#ffffff;stroke-width:180;stroke-dasharray:3983.4;stroke-dashoffset:1350;stroke-opacity:1"
        inkscape:export-filename="gradient.svg"
        inkscape:export-xdpi="800"
        inkscape:export-ydpi="800" />
@@ -206,5 +197,23 @@
          id="path10995-7-5-9-7"
          sodipodi:nodetypes="ccc" />
     </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer5"
+     inkscape:label="mask">
+    <path
+       d="m 1445,742.99994 h 1100.0001 c 236.1929,0 236.3465,-326.49995 0,-326.49995 -236.3466,0 -501.7395,3e-5 -735.0001,0 -233.2605,-3e-5 -238.6768,-326.500002 0,-326.500002 h 583.8425 486.1576"
+       stroke="#000000"
+       stroke-opacity="0.22"
+       stroke-width="9"
+       stroke-dasharray="31, 31"
+       id="path172-5-9"
+       sodipodi:nodetypes="czzzscc"
+       style="stroke:#ffffff;stroke-width:180;stroke-dasharray:3983.4;stroke-dashoffset:918;stroke-opacity:1"
+       inkscape:export-filename="gradient.svg"
+       inkscape:export-xdpi="800"
+       inkscape:export-ydpi="800"
+       transform="translate(1444.9999)" />
   </g>
 </svg>

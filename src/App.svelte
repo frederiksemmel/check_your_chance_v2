@@ -8,7 +8,7 @@
   import { tweened } from "svelte/motion";
   import { cubicInOut } from "svelte/easing";
 
-  let path_amount = tweened(3000, {
+  let path_amount = tweened(750, {
     duration: 2000,
     easing: cubicInOut,
   });
@@ -44,8 +44,17 @@
       ],
       strokeWidth: 2,
     });
+
+    const group = document.querySelector(".gradient-path");
+    group.setAttribute("mask", "url(#path-mask)");
   });
 </script>
+
+<svelte:head>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;800&display=swap");
+  </style></svelte:head
+>
 
 <main>
   <button on:click={() => path_amount.set(0)}> 0% </button>
@@ -62,23 +71,33 @@
     <svg
       width="1435"
       height="833"
-      viewBox="0 0 1435 832.99994"
+      viewBox="0 0 1435 833"
       fill="none"
       version="1.1"
       id="gradient-path-svg"
     >
-      <mask id="maskPath">
-        <path
-          d="M 5e-5,742.99995 H 1100.0001 c 236.1929,0 236.3465,-326.49995 0,-326.49995 -236.34655,0 -501.73954,3e-5 -735.00005,0 -233.26051,-3e-5 -238.67685,-326.5 0,-326.5 h 583.8425 486.15755"
-          stroke-width="180"
-          stroke-dasharray="31, 31"
-          style="stroke:#FFFFFFFF;stroke-width:180;stroke-dasharray:3983.4;stroke-dashoffset:{mask_offset};stroke-opacity:1"
-        />
-      </mask>
+      <defs>
+        <mask
+          maskUnits="userSpaceOnUse"
+          x="0"
+          y="0"
+          width="1435"
+          height="833"
+          id="path-mask"
+        >
+          <path
+            d="M 5e-5,742.99995 H 1100.0001 c 236.1929,0 236.3465,-326.49995 0,-326.49995 -236.34655,0 -501.73954,3e-5 -735.00005,0 -233.26051,-3e-5 -238.67685,-326.5 0,-326.5 h 583.8425 486.15755"
+            stroke-width="180"
+            stroke-dasharray="31, 31"
+            style="stroke:#FFFFFFFF;stroke-width:180;stroke-dasharray:3983.4;stroke-dashoffset:{mask_offset};stroke-opacity:1"
+          />
+        </mask>
+      </defs>
       <path
         d="M 5e-5,742.99995 H 1100.0001 c 236.1929,0 236.3465,-326.49995 0,-326.49995 -236.34655,0 -501.73954,3e-5 -735.00005,0 -233.26051,-3e-5 -238.67685,-326.5 0,-326.5 h 583.8425 486.15755"
+        stroke-width="180"
         id="gradient-path"
-        style="stroke:#ffffff;stroke-width:180;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+        style="stroke:#FFFFFFFF;stroke-width:180;stroke-dasharray:none;stroke-opacity:1"
       />
     </svg>
 
@@ -87,7 +106,7 @@
         <defs>
           <path
             id="testPath"
-        d="M 5e-5,742.99995 H 1100.0001 c 236.1929,0 236.3465,-326.49995 0,-326.49995 -236.34655,0 -501.73954,3e-5 -735.00005,0 -233.26051,-3e-5 -238.67685,-326.5 0,-326.5 h 583.8425 486.15755"
+            d="M 5e-5,742.99995 H 1100.0001 c 236.1929,0 236.3465,-326.49995 0,-326.49995 -236.34655,0 -501.73954,3e-5 -735.00005,0 -233.26051,-3e-5 -238.67685,-326.5 0,-326.5 h 583.8425 486.15755"
           />
         </defs>
         <text
@@ -95,12 +114,12 @@
           y="0"
           fill="#FFF"
           font-size="6em"
-          font-family="sans-serif"
+          font-family="Inter"
           font-weight="bold"
-          dominant-baseline="central"
+          dominant-baseline="mathematical"
           baseline-shift="10px"
         >
-          <textPath xlink:href="#testPath" startOffset={text_offset}%>
+          <textPath xlink:href="#testPath" startOffset="{text_offset}%">
             CHF {Math.round($path_amount)}
           </textPath>
         </text>
@@ -122,16 +141,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-  }
-  #gradient-path-svg {
-    -webkit-mask-repeat: space;
-    -webkit-mask-size: contain;
-
-    mask-repeat: space;
-    mask-image: url(#maskPath);
-    mask-position: center;
-    mask-mode: luminance;
-    mask-size: contain;
   }
   .logo {
     width: 100%;
@@ -175,15 +184,16 @@
     color: black;
     position: absolute;
     font-size: 3.2em;
-    font-weight: bold;
+    font-weight: 800;
+    font-family: Inter;
     writing-mode: vertical-rl;
   }
   .marks.start {
     bottom: 5px;
-    left: -10px;
+    left: -4px;
   }
   .marks.ziel {
     top: 35px;
-    right: 3px;
+    right: -4px;
   }
 </style>
