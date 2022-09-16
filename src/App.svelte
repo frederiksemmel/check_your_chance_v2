@@ -9,7 +9,7 @@
   import { tweened } from "svelte/motion";
   import { cubicInOut } from "svelte/easing";
 
-  let path_amount = tweened(1700, {
+  let path_amount = tweened(300, {
     duration: 4000,
     easing: cubicInOut,
   });
