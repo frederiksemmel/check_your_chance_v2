@@ -12,8 +12,6 @@ cd dist
 # if you are deploying to a custom domain
 # echo 'www.example.com' > CNAME
 
-git init
-git checkout -b main
 git add -A
 git commit -m 'deploy'
 
@@ -23,4 +21,4 @@ git commit -m 'deploy'
 # if you are deploying to https://<USERNAME>.github.io/<REPO>
 git push -f git@github.com:frederiksemmel/check_your_chance_v2.git main:gh-pages
 
-cd -
+cd ..

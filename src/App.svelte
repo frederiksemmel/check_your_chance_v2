@@ -9,7 +9,7 @@
   import { tweened } from "svelte/motion";
   import { cubicInOut } from "svelte/easing";
 
-  let path_amount = tweened(300, {
+  let path_amount = tweened(500, {
     duration: 4000,
     easing: cubicInOut,
   });
@@ -178,6 +178,7 @@
     width: 100%;
   }
   .logo img {
+    width: 391px;
     margin: 15px;
   }
   .counter {
