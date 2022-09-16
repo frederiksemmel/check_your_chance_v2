@@ -1,6 +1,7 @@
 <script lang="ts">
   import trackBg from "./assets/track_bg.svg";
   import checkpoints from "./assets/checkpoints.svg";
+  import personGirl from "./assets/persons/girl.png";
   import logo from "./assets/cyc_logo.svg";
   import { onMount } from "svelte";
   import { GradientPath } from "gradient-path";
@@ -9,14 +10,16 @@
   import { cubicInOut } from "svelte/easing";
 
   let path_amount = tweened(1700, {
-    duration: 2000,
+    duration: 4000,
     easing: cubicInOut,
   });
 
+  $: total_amount = visualize_amount($path_amount + 6000)
   $: path_percent = $path_amount / 3000;
   $: mask_offset = 3983.4 * (1 - path_percent);
   $: text_offset = path_percent * 100 - 15;
-  $: text_path_rotate = 0;
+  $: person_offset = path_percent * 100;
+  // $: text_path_rotate = 0;
   $: text_path = visualize_amount($path_amount);
 
   function visualize_amount(amount: number) {
@@ -74,12 +77,10 @@
     max="3000"
   />
   <div class="top-row">
-  <div class="logo">
-    <img src={logo} alt="CYC Logo" />
-  </div>
-  <div class="counter">
-    1000
-  </div>
+    <div class="logo">
+      <img src={logo} alt="CYC Logo" />
+    </div>
+    <div class="counter">{total_amount}</div>
   </div>
   <div class="track">
     <img src={trackBg} alt="Track Background" />
@@ -134,12 +135,12 @@
           font-family="Inter"
           font-weight="bold"
           dominant-baseline="mathematical"
-          baseline-shift="10px"
+          baseline-shift="12px"
         >
           <textPath xlink:href="#testPath" startOffset="{text_offset}%">
-          <tspan >
-            {text_path}
-          </tspan>
+            <tspan>
+              {text_path}
+            </tspan>
           </textPath>
         </text>
       </svg>
@@ -148,6 +149,11 @@
     <img src={checkpoints} alt="Track Checkpoints" />
     <div class="marks start">START</div>
     <div class="marks ziel">ZIEL</div>
+
+    <div class="person" style="offset-distance:{person_offset}%">
+      <img src={personGirl} alt="Foto" />
+    </div>
+
     <div class="chkpt chkpt1">Berufsorientierung</div>
     <div class="chkpt chkpt2">Lehrstelle</div>
     <div class="chkpt chkpt3">Lehrabschluss</div>
@@ -175,7 +181,28 @@
     margin: 15px;
   }
   .counter {
-    margin: 0 100px;
+    width: 1000px;
+    margin-right: 20px;
+    margin-bottom: 20px;
+    font-size: 6em;
+    font-weight: bold;
+  }
+  .person {
+    width: 180px;
+    height: 180px;
+    position: absolute;
+    offset-path: path(
+      "M 5e-5,742.99995 H 1100.0001 c 236.1929,0 236.3465,-326.49995 0,-326.49995 -236.34655,0 -501.73954,3e-5 -735.00005,0 -233.26051,-3e-5 -238.67685,-326.5 0,-326.5 h 583.8425 486.15755"
+    );
+    offset-rotate: 0deg;
+  }
+  .person img {
+    width: auto;
+    height: auto;
+    border-radius: 50%;
+    object-fit: contain;
+    outline: 10px solid #DADADA;
+    outline-offset: -10px;
   }
   .track {
     position: relative;
