@@ -3,21 +3,50 @@
   import checkpoints from "./assets/checkpoints.svg";
   import personGirl from "./assets/persons/girl.png";
   import logo from "./assets/cyc_logo.svg";
-  import { onMount } from "svelte";
-  import { GradientPath } from "gradient-path";
+  import GradientPath from "./GradientPath.svelte";
+  import PathCounter from "./PathCounter.svelte";
+
+  import { Fireworks } from "@fireworks-js/svelte";
+  import type { FireworksOptions } from "@fireworks-js/svelte";
+	import { fade } from 'svelte/transition';
+
+  let enabled = true;
+  let options: FireworksOptions = {
+    opacity: 0.5,
+    intensity: 60,
+    friction: 0.97,
+    decay: { min: 0.008, max: 0.03} ,
+    rocketsPoint: { min: 20, max: 80} ,
+    lineWidth: {
+      explosion: {
+        min: 2,
+        max: 4,
+      },
+      trace: {
+        min: 1,
+        max: 3,
+      },
+    },
+  };
+
+  // import { spring } from 'svelte/motion';
+  //  let path_amount= spring(500, {
+  //    stiffness: 0.02,
+  //    damping: 0.8,
+  //    precision: 0.3,
+  //  });
+
+  // $: path_amount = $amount_percent * 3000
 
   import { tweened } from "svelte/motion";
   import { cubicInOut } from "svelte/easing";
-
   let path_amount = tweened(500, {
-    duration: 4000,
+    duration: (start, stop) => Math.sqrt(Math.abs(stop - start)) * 100,
     easing: cubicInOut,
   });
 
-  $: total_amount = visualize_amount($path_amount + 6000)
+  $: total_amount = visualize_amount($path_amount + 6000);
   $: path_percent = $path_amount / 3000;
-  $: mask_offset = 3983.4 * (1 - path_percent);
-  $: text_offset = path_percent * 100 - 15;
   $: person_offset = path_percent * 100;
   // $: text_path_rotate = 0;
   $: text_path = visualize_amount($path_amount);
@@ -26,38 +55,6 @@
     let text = "CHF " + Math.round(amount);
     return text;
   }
-
-  onMount(async () => {
-    const gp = new GradientPath({
-      path: document.querySelector("#gradient-path"),
-      segments: 300,
-      samples: 3,
-      precision: 2, // Optional
-    });
-
-    gp.render({
-      type: "path",
-      fill: [
-        { color: "#F7797D", pos: 0 },
-        { color: "#6DD5ED", pos: 0.25 },
-        { color: "#C6FFDD", pos: 0.5 },
-        { color: "#FBD786", pos: 0.75 },
-        { color: "#F7797D", pos: 1 },
-      ],
-      width: 120,
-      stroke: [
-        { color: "#F7797D", pos: 0 },
-        { color: "#6DD5ED", pos: 0.25 },
-        { color: "#C6FFDD", pos: 0.5 },
-        { color: "#FBD786", pos: 0.75 },
-        { color: "#F7797D", pos: 1 },
-      ],
-      strokeWidth: 2,
-    });
-
-    const group = document.querySelector(".gradient-path");
-    group.setAttribute("mask", "url(#path-mask)");
-  });
 </script>
 
 <svelte:head>
@@ -67,15 +64,6 @@
 >
 
 <main>
-  <input
-    type="range"
-    style="width:500px"
-    on:input={(e) => {
-      path_amount.set(e.target.value * 1.0);
-    }}
-    min="0"
-    max="3000"
-  />
   <div class="top-row">
     <div class="logo">
       <img src={logo} alt="CYC Logo" />
@@ -85,66 +73,8 @@
   <div class="track">
     <img src={trackBg} alt="Track Background" />
 
-    <svg
-      width="1435"
-      height="833"
-      viewBox="0 0 1435 833"
-      fill="none"
-      version="1.1"
-      id="gradient-path-svg"
-      overflow="visible"
-    >
-      <defs>
-        <mask
-          maskUnits="userSpaceOnUse"
-          x="0"
-          y="0"
-          width="1435"
-          height="833"
-          id="path-mask"
-        >
-          <path
-            d="M 5e-5,742.99995 H 1100.0001 c 236.1929,0 236.3465,-326.49995 0,-326.49995 -236.34655,0 -501.73954,3e-5 -735.00005,0 -233.26051,-3e-5 -238.67685,-326.5 0,-326.5 h 583.8425 486.15755"
-            stroke-width="180"
-            stroke-dasharray="31, 31"
-            style="stroke:#FFFFFFFF;stroke-width:180;stroke-dasharray:3983.4;stroke-dashoffset:{mask_offset};stroke-opacity:1"
-          />
-        </mask>
-      </defs>
-      <path
-        d="M 5e-5,742.99995 H 1100.0001 c 236.1929,0 236.3465,-326.49995 0,-326.49995 -236.34655,0 -501.73954,3e-5 -735.00005,0 -233.26051,-3e-5 -238.67685,-326.5 0,-326.5 h 583.8425 486.15755"
-        stroke-width="180"
-        id="gradient-path"
-        style="stroke:#FFFFFFFF;stroke-width:180;stroke-dasharray:none;stroke-opacity:1"
-      />
-    </svg>
-
-    <div class="path-counter">
-      <svg width="1435" height="833">
-        <defs>
-          <path
-            id="testPath"
-            d="M 5e-5,742.99995 H 1100.0001 c 236.1929,0 236.3465,-326.49995 0,-326.49995 -236.34655,0 -501.73954,3e-5 -735.00005,0 -233.26051,-3e-5 -238.67685,-326.5 0,-326.5 h 583.8425 486.15755"
-          />
-        </defs>
-        <text
-          x="0px"
-          y="0px"
-          fill="#FFF"
-          font-size="6em"
-          font-family="Inter"
-          font-weight="bold"
-          dominant-baseline="mathematical"
-          baseline-shift="12px"
-        >
-          <textPath xlink:href="#testPath" startOffset="{text_offset}%">
-            <tspan>
-              {text_path}
-            </tspan>
-          </textPath>
-        </text>
-      </svg>
-    </div>
+    <GradientPath {path_percent} />
+    <PathCounter {path_percent} {text_path} />
 
     <img src={checkpoints} alt="Track Checkpoints" />
     <div class="marks start">START</div>
@@ -159,9 +89,43 @@
     <div class="chkpt chkpt3">Lehrabschluss</div>
     <div class="chkpt chkpt4">Erster Job</div>
   </div>
+
+  {#if enabled}
+  <div transition:fade>
+    <Fireworks {options} class="fireworks" />
+  </div>
+  {/if}
+
+  <input
+    type="range"
+    style="width:500px"
+    on:input={(e) => {
+      path_amount.set(e.target.value * 1.0);
+    }}
+    min="0.0"
+    max="3000"
+  />
+  <button on:click={() => (enabled = !enabled)} class="btn">
+    {enabled ? "Enabled" : "Disabled"}
+  </button>
 </main>
 
 <style>
+  :global(.fireworks) {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    background: #00000000;
+  }
+
+  .btn {
+    z-index: 1;
+  }
+  input {
+    z-index: 1;
+  }
   main {
     display: flex;
     flex-direction: column;
@@ -202,7 +166,7 @@
     height: auto;
     border-radius: 50%;
     object-fit: contain;
-    outline: 10px solid #DADADA;
+    outline: 10px solid #dadada;
     outline-offset: -10px;
   }
   .track {
@@ -211,9 +175,6 @@
     width: 1435px;
   }
   .track img {
-    position: absolute;
-  }
-  .track svg {
     position: absolute;
   }
   .chkpt {
