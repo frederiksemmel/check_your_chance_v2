@@ -18,17 +18,15 @@
       fill: [
         { color: "#F7797D", pos: 0 },
         { color: "#6DD5ED", pos: 0.25 },
-        { color: "#C6FFDD", pos: 0.5 },
         { color: "#FBD786", pos: 0.75 },
-        { color: "#F7797D", pos: 1 },
+        { color: "#C6FFDD", pos: 1 },
       ],
       width: 120,
       stroke: [
         { color: "#F7797D", pos: 0 },
         { color: "#6DD5ED", pos: 0.25 },
-        { color: "#C6FFDD", pos: 0.5 },
         { color: "#FBD786", pos: 0.75 },
-        { color: "#F7797D", pos: 1 },
+        { color: "#C6FFDD", pos: 1 },
       ],
       strokeWidth: 2,
     });

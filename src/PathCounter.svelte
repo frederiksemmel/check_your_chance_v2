@@ -1,9 +1,11 @@
 <script>
   export let path_percent = 0;
   export let text_path = "";
+  
+  let font_size = "5em"
 
-  $: text_offset = path_percent * 100 - 15;
-  $: text_offset_reverse = (1 - path_percent) * 100 + 3.7;
+  $: text_offset = path_percent * 100;
+  $: text_offset_reverse = (1 - path_percent) * 100;
 </script>
 
 <div class="path-counter-container">
@@ -16,10 +18,10 @@
         />
       </defs>
       <text
-        x="0px"
+        x="-550px"
         y="0px"
         fill="#FFF"
-        font-size="6em"
+        font-size={font_size}
         font-family="Inter"
         font-weight="bold"
         dominant-baseline="mathematical"
@@ -42,10 +44,10 @@
       </defs>
       <g transform="translate(-4335)">
         <text
-          x="0px"
+          x="150px"
           y="0px"
           fill="#FFF"
-          font-size="6em"
+          font-size={font_size}
           font-family="Inter"
           font-weight="bold"
           dominant-baseline="mathematical"

@@ -5,30 +5,13 @@
   import logo from "./assets/cyc_logo.svg";
   import GradientPath from "./GradientPath.svelte";
   import PathCounter from "./PathCounter.svelte";
+  import FireworksCYC from "./FireworksCYC.svelte";
+  import { flip } from "svelte/animate";
 
-  import { Fireworks } from "@fireworks-js/svelte";
-  import type { FireworksOptions } from "@fireworks-js/svelte";
-	import { fade } from 'svelte/transition';
+  const ANIMATION_SPEEDUP = 2;
+  const CROSSFADE_MS = 1500;
 
-  let enabled = true;
-  let options: FireworksOptions = {
-    opacity: 0.5,
-    intensity: 60,
-    friction: 0.97,
-    decay: { min: 0.008, max: 0.03} ,
-    rocketsPoint: { min: 20, max: 80} ,
-    lineWidth: {
-      explosion: {
-        min: 2,
-        max: 4,
-      },
-      trace: {
-        min: 1,
-        max: 3,
-      },
-    },
-  };
-
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
   // import { spring } from 'svelte/motion';
   //  let path_amount= spring(500, {
   //    stiffness: 0.02,
@@ -39,22 +22,123 @@
   // $: path_amount = $amount_percent * 3000
 
   import { tweened } from "svelte/motion";
-  import { cubicInOut } from "svelte/easing";
-  let path_amount = tweened(500, {
-    duration: (start, stop) => Math.sqrt(Math.abs(stop - start)) * 100,
-    easing: cubicInOut,
-  });
+  import { sineInOut, cubicIn } from "svelte/easing";
 
-  $: total_amount = visualize_amount($path_amount + 6000);
-  $: path_percent = $path_amount / 3000;
-  $: person_offset = path_percent * 100;
-  // $: text_path_rotate = 0;
-  $: text_path = visualize_amount($path_amount);
+  let path_progress = tweened(0, {
+    duration: (start, stop) =>
+      (Math.sqrt(Math.abs(stop - start)) * 12000) / ANIMATION_SPEEDUP,
+    easing: sineInOut,
+  });
+  let total_amount = 0;
+  let amount_completed = 0;
+  let completed_persons = [];
+  let uncompleted_persons = [];
+  let current_person = {
+    src: personGirl,
+    id: 0,
+  };
+  let person_showing = true;
+  let crossfade_animating_start = false;
+  let crossfade_animating_stop = false;
+  let fireworks_enabled = false;
+  reset_amount(total_amount);
+
+  function setup_persons() {
+    let all_persons = [];
+    for (let i = 0; i < 20; i++) {
+      all_persons.push({ src: personGirl, id: i });
+    }
+    return all_persons;
+  }
+
+  function reset_amount(total_amount: number) {
+    let num_completed = Math.floor(total_amount / 3000);
+    amount_completed = num_completed * 3000;
+    completed_persons = [];
+    uncompleted_persons = setup_persons();
+    for (let i = 0; i < num_completed; i++) {
+      let p = uncompleted_persons.pop();
+      completed_persons.push(p);
+    }
+    current_person = {
+      src: personGirl,
+      id: num_completed,
+    };
+    person_showing = true;
+    path_progress = tweened((total_amount - amount_completed) / 3000, {
+      duration: (start, stop) =>
+        (Math.sqrt(Math.abs(stop - start)) * 12000) / ANIMATION_SPEEDUP,
+      easing: sineInOut,
+    });
+  }
+
+  async function set_amount(total_amount: number) {
+    let to_be_animated = total_amount - amount_completed;
+    let rounds = Math.floor((total_amount - amount_completed) / 3000);
+    for (let i = 0; i < rounds; i++) {
+      await path_progress.set(1);
+      await add_person_top();
+      to_be_animated -= 3000;
+    }
+    path_progress.set(to_be_animated / 3000);
+  }
+  async function add_person_top() {
+    await path_progress.set(1);
+    crossfade_animating_stop = true;
+    await sleep(10);
+    person_showing = false;
+    fireworks_enabled = true;
+    crossfade_animating_stop = false;
+    completed_persons = completed_persons.concat(current_person);
+    await sleep(CROSSFADE_MS);
+    crossfade_animating_stop = false;
+    await path_progress.set(2, {
+      duration: 3000 / ANIMATION_SPEEDUP,
+      easing: cubicIn,
+    });
+    amount_completed += 3000;
+    await path_progress.set(0, { duration: 0 });
+    await sleep(1000 / ANIMATION_SPEEDUP);
+    current_person = uncompleted_persons.pop();
+    uncompleted_persons = uncompleted_persons;
+    crossfade_animating_start = true;
+    await sleep(CROSSFADE_MS);
+    crossfade_animating_start = false;
+    person_showing = true;
+    fireworks_enabled = false;
+  }
+
+  $: set_amount(total_amount);
+  $: total_amount_vis = visualize_amount(
+    amount_completed + Math.min($path_progress, 1) * 3000
+  );
+  $: person_offset = $path_progress * 100;
+  $: text_path = visualize_amount(Math.min($path_progress, 1) * 3000);
 
   function visualize_amount(amount: number) {
     let text = "CHF " + Math.round(amount);
     return text;
   }
+
+  import { quintOut } from "svelte/easing";
+  import { crossfade } from "svelte/transition";
+
+  const [send, receive] = crossfade({
+    duration: CROSSFADE_MS,
+
+    fallback(node, _) {
+      const style = getComputedStyle(node);
+      const transform = style.transform === "none" ? "" : style.transform;
+
+      return {
+        duration: 600,
+        easing: quintOut,
+        css: (t) => `
+					transform: ${transform} scale(${t});
+				`,
+      };
+    },
+  });
 </script>
 
 <svelte:head>
@@ -68,46 +152,77 @@
     <div class="logo">
       <img src={logo} alt="CYC Logo" />
     </div>
-    <div class="counter">{total_amount}</div>
+    <div class="counter">{total_amount_vis}</div>
   </div>
-  <div class="track">
-    <img src={trackBg} alt="Track Background" />
-
-    <GradientPath {path_percent} />
-    <PathCounter {path_percent} {text_path} />
-
-    <img src={checkpoints} alt="Track Checkpoints" />
-    <div class="marks start">START</div>
-    <div class="marks ziel">ZIEL</div>
-
-    <div class="person" style="offset-distance:{person_offset}%">
-      <img src={personGirl} alt="Foto" />
+  <div class="track-container">
+    <div class="persons uncompleted">
+      {#each uncompleted_persons as person (person.id)}
+        <div class="small-person" out:send={{ key: person.id }} animate:flip>
+          <img src={person.src} alt="Foto" />
+        </div>
+      {/each}
     </div>
+    <div class="track">
+      <img src={trackBg} alt="Track Background" />
 
-    <div class="chkpt chkpt1">Berufsorientierung</div>
-    <div class="chkpt chkpt2">Lehrstelle</div>
-    <div class="chkpt chkpt3">Lehrabschluss</div>
-    <div class="chkpt chkpt4">Erster Job</div>
+      <GradientPath path_percent={$path_progress} />
+      <PathCounter path_percent={$path_progress} {text_path} />
+
+      <img src={checkpoints} alt="Track Checkpoints" />
+      <div class="marks start">START</div>
+      <div class="marks ziel">ZIEL</div>
+
+      {#if crossfade_animating_stop}
+        <div
+          class="person-animating stop"
+          out:send={{ key: current_person.id }}
+        >
+          <img src={current_person.src} alt="Foto" />
+        </div>
+      {/if}
+      {#if crossfade_animating_start}
+        <div
+          class="person-animating start"
+          in:receive={{ key: current_person.id }}
+        >
+          <img src={current_person.src} alt="Foto" />
+        </div>
+      {/if}
+      {#if person_showing}
+        <div class="person" style="offset-distance:{person_offset}%">
+          <img src={current_person.src} alt="Foto" />
+        </div>
+      {/if}
+
+      <div class="chkpt chkpt1">Berufsorientierung</div>
+      <div class="chkpt chkpt2">Lehrstelle</div>
+      <div class="chkpt chkpt3">Lehrabschluss</div>
+      <div class="chkpt chkpt4">Erster Job</div>
+    </div>
+    <div class="persons completed">
+      {#each completed_persons as person (person.id)}
+        <div class="small-person" in:receive={{ key: person.id }} animate:flip>
+          <img src={person.src} alt="Foto" />
+        </div>
+      {/each}
+    </div>
   </div>
 
-  {#if enabled}
-  <div transition:fade>
-    <Fireworks {options} class="fireworks" />
-  </div>
-  {/if}
+  <FireworksCYC enabled={fireworks_enabled} />
 
   <input
     type="range"
-    style="width:500px"
-    on:input={(e) => {
-      path_amount.set(e.target.value * 1.0);
-    }}
+    style="width:1000px;height:20px;"
+    bind:value={total_amount}
     min="0.0"
-    max="3000"
+    step="50"
+    max="10000"
   />
-  <button on:click={() => (enabled = !enabled)} class="btn">
-    {enabled ? "Enabled" : "Disabled"}
+  <button on:click={() => (fireworks_enabled = !fireworks_enabled)} class="btn">
+    {fireworks_enabled ? "Enabled" : "Disabled"}
   </button>
+
+  <button on:click={add_person_top} class="btn"> Add to top </button>
 </main>
 
 <style>
@@ -118,6 +233,10 @@
     height: 100%;
     position: fixed;
     background: #00000000;
+  }
+  .track-container {
+    display: flex;
+    flex-direction: row;
   }
 
   .btn {
@@ -139,35 +258,84 @@
     flex: 1;
   }
   .logo {
-    width: 100%;
+    margin-right: auto;
   }
   .logo img {
     width: 391px;
     margin: 15px;
   }
   .counter {
-    width: 1000px;
+    width: 800px;
     margin-right: 20px;
     margin-bottom: 20px;
-    font-size: 6em;
+    font-size: 7em;
     font-weight: bold;
+    white-space: nowrap;
   }
   .person {
     width: 180px;
     height: 180px;
-    position: absolute;
     offset-path: path(
       "M 5e-5,742.99995 H 1100.0001 c 236.1929,0 236.3465,-326.49995 0,-326.49995 -236.34655,0 -501.73954,3e-5 -735.00005,0 -233.26051,-3e-5 -238.67685,-326.5 0,-326.5 h 583.8425 486.15755"
     );
     offset-rotate: 0deg;
   }
-  .person img {
-    width: auto;
-    height: auto;
+  .person-animating {
+    position: absolute;
+    width: 180px;
+    height: 180px;
+  }
+  .person-animating.start {
+    bottom: 0px;
+    left: -90px;
+  }
+  .person-animating.stop {
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    top: 0px;
+    right: -90px;
+  }
+  .person-animating img {
+    width: 180;
+    height: 180;
     border-radius: 50%;
-    object-fit: contain;
     outline: 10px solid #dadada;
     outline-offset: -10px;
+  }
+  .person img {
+    width: 180;
+    height: 180;
+    border-radius: 50%;
+    outline: 10px solid #dadada;
+    outline-offset: -10px;
+  }
+  .persons {
+    width: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .persons.completed {
+    flex-direction: column-reverse;
+    margin-top: 100px;
+    margin-left: 70px;
+  }
+  .persons.uncompleted {
+    margin-bottom: 100px;
+    margin-right: 70px;
+  }
+  .small-person {
+    margin-top: -50px;
+  }
+  .small-person img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: contain;
+    outline: 5px solid #dadada;
+    outline-offset: -5px;
   }
   .track {
     position: relative;
@@ -178,7 +346,7 @@
     position: absolute;
   }
   .chkpt {
-    font-size: 3.7em;
+    font-size: 4em;
     font-weight: bold;
     position: absolute;
   }
