@@ -33,10 +33,7 @@
   let amount_completed = 0;
   let completed_persons = [];
   let uncompleted_persons = [];
-  let current_person = {
-    src: personGirl,
-    id: 0,
-  };
+  let current_person: {src: string, id: number};
   let person_showing = true;
   let crossfade_animating_start = false;
   let crossfade_animating_stop = false;
@@ -48,6 +45,7 @@
     for (let i = 0; i < 20; i++) {
       all_persons.push({ src: personGirl, id: i });
     }
+    current_person = all_persons.pop()
     return all_persons;
   }
 
@@ -57,13 +55,10 @@
     completed_persons = [];
     uncompleted_persons = setup_persons();
     for (let i = 0; i < num_completed; i++) {
+      console.log("Reset: adding person")
       let p = uncompleted_persons.pop();
       completed_persons.push(p);
     }
-    current_person = {
-      src: personGirl,
-      id: num_completed,
-    };
     person_showing = true;
     path_progress = tweened((total_amount - amount_completed) / 3000, {
       duration: (start, stop) =>
@@ -152,7 +147,7 @@
     <div class="logo">
       <img src={logo} alt="CYC Logo" />
     </div>
-    <div class="counter">{total_amount_vis}</div>
+    <div class="counter" style="width:{70 * total_amount_vis.length}px">{total_amount_vis}</div>
   </div>
   <div class="track-container">
     <div class="persons uncompleted">
@@ -201,7 +196,7 @@
     </div>
     <div class="persons completed">
       {#each completed_persons as person (person.id)}
-        <div class="small-person" in:receive={{ key: person.id }} animate:flip>
+        <div class="small-person" in:receive={{ key: person.id }} animate:flip style="z-index:{100-person.id}">
           <img src={person.src} alt="Foto" />
         </div>
       {/each}
@@ -216,7 +211,7 @@
     bind:value={total_amount}
     min="0.0"
     step="50"
-    max="10000"
+    max="20000"
   />
   <button on:click={() => (fireworks_enabled = !fireworks_enabled)} class="btn">
     {fireworks_enabled ? "Enabled" : "Disabled"}
@@ -265,9 +260,8 @@
     margin: 15px;
   }
   .counter {
-    width: 800px;
-    margin-right: 20px;
-    margin-bottom: 20px;
+    text-align: left;
+    margin: 20px;
     font-size: 7em;
     font-weight: bold;
     white-space: nowrap;
