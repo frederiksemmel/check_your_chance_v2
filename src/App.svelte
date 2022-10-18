@@ -1,14 +1,13 @@
 <script lang="ts">
   import trackBg from "./assets/track_bg.svg";
   import checkpoints from "./assets/checkpoints.svg";
-  import personGirl from "./assets/persons/girl.png";
-  import logo from "./assets/cyc_logo.svg";
   import GradientPath from "./GradientPath.svelte";
   import PathCounter from "./PathCounter.svelte";
   import FireworksCYC from "./FireworksCYC.svelte";
   import { flip } from "svelte/animate";
+  import { fly } from "svelte/transition";
 
-  const ANIMATION_SPEEDUP = 2;
+  const ANIMATION_SPEEDUP = 10;
   const CROSSFADE_MS = 1500;
 
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -31,33 +30,56 @@
   });
   let total_amount = 0;
   let amount_completed = 0;
-  let completed_persons = [];
-  let uncompleted_persons = [];
-  let current_person: {src: string, id: number};
+  let persons_outside = [];
+  let persons_right = [];
+  let persons_left = [];
+  let current_person: { src: string; id: number, z: number};
   let person_showing = true;
   let crossfade_animating_start = false;
   let crossfade_animating_stop = false;
   let fireworks_enabled = false;
   reset_amount(total_amount);
 
-  function setup_persons() {
-    let all_persons = [];
-    for (let i = 0; i < 20; i++) {
-      all_persons.push({ src: personGirl, id: i });
+  function shuffle(a: Array<string>) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
     }
-    current_person = all_persons.pop()
+    return a;
+  }
+
+  function generate_all_persons() {
+    let all_persons = [];
+    let total_m = 9;
+    for (let i = 0; i < total_m; i++) {
+      let src = "./persons/m_" + i + ".png";
+      all_persons.push({ src: src, id: i, z: 0 });
+    }
+    let total_w = 14;
+    for (let i = 0; i < total_w; i++) {
+      let src = "./persons/w_" + i + ".png";
+      all_persons.push({ src: src, id: total_m + i, z:0 });
+    }
+    all_persons = shuffle(all_persons);
+    current_person = all_persons.pop();
     return all_persons;
   }
 
   function reset_amount(total_amount: number) {
     let num_completed = Math.floor(total_amount / 3000);
     amount_completed = num_completed * 3000;
-    completed_persons = [];
-    uncompleted_persons = setup_persons();
+    persons_right = [];
+    persons_outside = generate_all_persons();
+    persons_left = [];
+    for (let i = 0; i < 5; i++) {
+      persons_left.push(persons_outside.pop());
+    }
     for (let i = 0; i < num_completed; i++) {
-      console.log("Reset: adding person")
-      let p = uncompleted_persons.pop();
-      completed_persons.push(p);
+      console.log("Reset: adding person");
+      let p_to_right = persons_left.pop();
+      let p_to_left = persons_outside.pop();
+      persons_left.push(p_to_left);
+      persons_right.push(p_to_right);
     }
     person_showing = true;
     path_progress = tweened((total_amount - amount_completed) / 3000, {
@@ -84,7 +106,13 @@
     person_showing = false;
     fireworks_enabled = true;
     crossfade_animating_stop = false;
-    completed_persons = completed_persons.concat(current_person);
+    let z_on_right: number[] = persons_right.map((person) => {return person.z});
+    let topmost_z = Math.max(0, ...z_on_right);
+    console.log(topmost_z)
+    console.log(current_person)
+    current_person.z = topmost_z + 1;
+    console.log(current_person)
+    persons_right = persons_right.concat(current_person);
     await sleep(CROSSFADE_MS);
     crossfade_animating_stop = false;
     await path_progress.set(2, {
@@ -94,13 +122,19 @@
     amount_completed += 3000;
     await path_progress.set(0, { duration: 0 });
     await sleep(1000 / ANIMATION_SPEEDUP);
-    current_person = uncompleted_persons.pop();
-    uncompleted_persons = uncompleted_persons;
+    current_person = persons_left.pop();
+    persons_left = persons_left;
     crossfade_animating_start = true;
     await sleep(CROSSFADE_MS);
     crossfade_animating_start = false;
     person_showing = true;
     fireworks_enabled = false;
+
+    // New: move person from outside to left
+    // TODO refactor this function
+    // TODO handle case of no more persons gracefully
+    let person_to_left = persons_outside.pop();
+    persons_left = [person_to_left].concat(persons_left);
   }
 
   $: set_amount(total_amount);
@@ -144,15 +178,14 @@
 
 <main>
   <div class="top-row">
-    <div class="logo">
-      <img src={logo} alt="CYC Logo" />
+    <div class="counter" style="width:{70 * total_amount_vis.length}px">
+      {total_amount_vis}
     </div>
-    <div class="counter" style="width:{70 * total_amount_vis.length}px">{total_amount_vis}</div>
   </div>
   <div class="track-container">
     <div class="persons uncompleted">
-      {#each uncompleted_persons as person (person.id)}
-        <div class="small-person" out:send={{ key: person.id }} animate:flip>
+      {#each persons_left as person (person.id)}
+        <div class="small-person" out:send={{ key: person.id }} animate:flip in:fly="{{ y: -100, duration: 500 }}">
           <img src={person.src} alt="Foto" />
         </div>
       {/each}
@@ -195,8 +228,13 @@
       <div class="chkpt chkpt4">Erster Job</div>
     </div>
     <div class="persons completed">
-      {#each completed_persons as person (person.id)}
-        <div class="small-person" in:receive={{ key: person.id }} animate:flip style="z-index:{100-person.id}">
+      {#each persons_right as person (person.id)}
+        <div
+          class="small-person"
+          in:receive={{ key: person.id }}
+          animate:flip
+          style="z-index:{person.z}"
+        >
           <img src={person.src} alt="Foto" />
         </div>
       {/each}
@@ -248,20 +286,14 @@
   .top-row {
     width: 100%;
     display: flex;
-    align-items: center;
-    justify-content: stretch;
+    flex-direction: row;
+    justify-content: flex-end;
     flex: 1;
-  }
-  .logo {
-    margin-right: auto;
-  }
-  .logo img {
-    width: 391px;
-    margin: 15px;
   }
   .counter {
     text-align: left;
     margin: 20px;
+    margin-right: 200px;
     font-size: 7em;
     font-weight: bold;
     white-space: nowrap;
@@ -321,7 +353,8 @@
     margin-right: 70px;
   }
   .small-person {
-    margin-top: -50px;
+    z-index: 1;
+    margin-top: -30px;
   }
   .small-person img {
     width: 80px;
