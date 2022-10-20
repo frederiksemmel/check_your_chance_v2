@@ -7,7 +7,7 @@
   import { flip } from "svelte/animate";
   import { fly } from "svelte/transition";
 
-  const ANIMATION_SPEEDUP = 10;
+  const ANIMATION_SPEEDUP = 0.6;
   const CROSSFADE_MS = 1500;
 
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -22,11 +22,35 @@
 
   import { tweened } from "svelte/motion";
   import { sineInOut, cubicIn } from "svelte/easing";
+  
+  let path_easing = sineInOut
+  
+  function easingSlowCorners(t: number) {
+    console.log(t)
+    let corners = [0.345, 0.665];
+    
+    
+    if (t <= corners[0]) {
+      let x1 = 0;
+      let x2 = corners[0];
+      return sineInOut((t - x1) / (x2 - x1)) * (x2 - x1) + x1
+    } 
+    else if (t > corners[0] && t <= corners[1]) {
+      let x1 = corners[0];
+      let x2 = corners[1];
+      return sineInOut((t - x1) / (x2 - x1)) * (x2 - x1) + x1
+    } 
+    else if (t > corners[1]) {
+      let x1 = corners[1];
+      let x2 = 1;
+      return sineInOut((t - x1) / (x2 - x1)) * (x2 - x1) + x1
+    } 
+  }
 
   let path_progress = tweened(0, {
     duration: (start, stop) =>
       (Math.sqrt(Math.abs(stop - start)) * 12000) / ANIMATION_SPEEDUP,
-    easing: sineInOut,
+    easing: path_easing ,
   });
   let total_amount = 0;
   let amount_completed = 0;
@@ -85,7 +109,7 @@
     path_progress = tweened((total_amount - amount_completed) / 3000, {
       duration: (start, stop) =>
         (Math.sqrt(Math.abs(stop - start)) * 12000) / ANIMATION_SPEEDUP,
-      easing: sineInOut,
+    easing: path_easing ,
     });
   }
 
@@ -145,8 +169,13 @@
   $: text_path = visualize_amount(Math.min($path_progress, 1) * 3000);
 
   function visualize_amount(amount: number) {
-    let text = "CHF " + Math.round(amount);
-    return text;
+    let thousands = Math.floor(amount / 1000);
+    let rest = Math.round(amount - 1000 * thousands);
+    return amount.toLocaleString("de-CH", {
+      style: "currency",
+      currency: "CHF",
+      maximumFractionDigits: 0,
+    })
   }
 
   import { quintOut } from "svelte/easing";
@@ -357,8 +386,8 @@
     margin-top: -30px;
   }
   .small-person img {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
     object-fit: contain;
     outline: 5px solid #dadada;

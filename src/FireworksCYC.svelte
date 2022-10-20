@@ -1,13 +1,43 @@
 <script lang="ts">
   import Fireworks from "@fireworks-js/svelte";
   import type { FireworksOptions } from "@fireworks-js/svelte";
-  
-  import explosion0 from "./assets/sounds/explosion0.mp3"
-  import explosion1 from "./assets/sounds/explosion1.mp3"
-  import explosion2 from "./assets/sounds/explosion2.mp3"
-  import rocket from "./assets/sounds/rocket.mp3"
+
+  import explosion0 from "./assets/sounds/explosion0.mp3";
+  import explosion1 from "./assets/sounds/explosion1.mp3";
+  import explosion2 from "./assets/sounds/explosion2.mp3";
+  import background_fireworks from "./assets/sounds/celebration_new_year.mp3";
+  import rocket from "./assets/sounds/rocket.mp3";
 
   import { fade } from "svelte/transition";
+  import { tweened } from "svelte/motion";
+  import { sineInOut } from "svelte/easing";
+
+  let audio = new Audio(background_fireworks);
+  
+  function set_volume(vol: number) {
+    console.log(audio.volume)
+    console.log(vol)
+    audio.volume = vol
+  }
+
+  let volume_fade = tweened(1, {
+    duration: 2000,
+    easing: sineInOut,
+  });
+  $: set_volume($volume_fade)
+
+  async function play(enabled: boolean) {
+    if (enabled) {
+      audio.play();
+      await volume_fade.set(1);
+    } else {
+      await volume_fade.set(0);
+      audio.pause();
+      audio.currentTime = 0;
+    }
+  }
+
+  $: play(enabled);
 
   export let enabled = false;
   let options: FireworksOptions = {
@@ -57,16 +87,11 @@
       y: 50,
     },
     sound: {
-      enabled: false,
-      files: [
-        explosion0,
-        explosion1,
-        explosion2,
-        rocket,
-      ],
+      enabled: true,
+      files: [explosion0, explosion1, explosion2],
       volume: {
-        min: 20,
-        max: 30,
+        min: 10,
+        max: 20,
       },
     },
   };
