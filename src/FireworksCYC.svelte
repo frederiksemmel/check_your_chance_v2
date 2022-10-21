@@ -6,7 +6,6 @@
   import explosion1 from "./assets/sounds/explosion1.mp3";
   import explosion2 from "./assets/sounds/explosion2.mp3";
   import background_fireworks from "./assets/sounds/celebration_new_year.mp3";
-  import rocket from "./assets/sounds/rocket.mp3";
 
   import { fade } from "svelte/transition";
   import { tweened } from "svelte/motion";
@@ -15,8 +14,6 @@
   let audio = new Audio(background_fireworks);
   
   function set_volume(vol: number) {
-    console.log(audio.volume)
-    console.log(vol)
     audio.volume = vol
   }
 

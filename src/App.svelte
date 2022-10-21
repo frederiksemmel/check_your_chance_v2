@@ -7,7 +7,31 @@
   import { flip } from "svelte/animate";
   import { fly } from "svelte/transition";
 
-  const ANIMATION_SPEEDUP = 0.6;
+  // get from websocket
+  
+  let tween_running = false;
+  
+  const socket = new WebSocket("ws://127.0.0.1:8765");
+  socket.addEventListener("message", async (message) => {
+    let json = JSON.parse(message.data);
+    console.log(json);
+    let total_amount = json.total_amount;
+    if (json.reset) {
+      reset_amount(total_amount);
+    } else if (!tween_running) {
+      console.log("Setting amount from ws")
+      tween_running = true;
+      console.log("setting true")
+      await set_amount(total_amount);
+      console.log("setting false")
+      tween_running = false;
+    }
+    else if (tween_running) {
+      console.log("Tween is running, ignoring message")
+    }
+  });
+
+  const ANIMATION_SPEEDUP = 0.7;
   const CROSSFADE_MS = 1500;
 
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -22,70 +46,52 @@
 
   import { tweened } from "svelte/motion";
   import { sineInOut, cubicIn } from "svelte/easing";
-  
-  let path_easing = sineInOut
-  
+
+  let path_easing = sineInOut;
+
   function easingSlowCorners(t: number) {
-    console.log(t)
+    console.log(t);
     let corners = [0.345, 0.665];
-    
-    
+
     if (t <= corners[0]) {
       let x1 = 0;
       let x2 = corners[0];
-      return sineInOut((t - x1) / (x2 - x1)) * (x2 - x1) + x1
-    } 
-    else if (t > corners[0] && t <= corners[1]) {
+      return sineInOut((t - x1) / (x2 - x1)) * (x2 - x1) + x1;
+    } else if (t > corners[0] && t <= corners[1]) {
       let x1 = corners[0];
       let x2 = corners[1];
-      return sineInOut((t - x1) / (x2 - x1)) * (x2 - x1) + x1
-    } 
-    else if (t > corners[1]) {
+      return sineInOut((t - x1) / (x2 - x1)) * (x2 - x1) + x1;
+    } else if (t > corners[1]) {
       let x1 = corners[1];
       let x2 = 1;
-      return sineInOut((t - x1) / (x2 - x1)) * (x2 - x1) + x1
-    } 
+      return sineInOut((t - x1) / (x2 - x1)) * (x2 - x1) + x1;
+    }
   }
 
   let path_progress = tweened(0, {
     duration: (start, stop) =>
       (Math.sqrt(Math.abs(stop - start)) * 12000) / ANIMATION_SPEEDUP,
-    easing: path_easing ,
+    easing: path_easing,
   });
   let total_amount = 0;
   let amount_completed = 0;
   let persons_outside = [];
   let persons_right = [];
   let persons_left = [];
-  let current_person: { src: string; id: number, z: number};
+  let current_person: { src: string; id: number; z: number };
   let person_showing = true;
   let crossfade_animating_start = false;
   let crossfade_animating_stop = false;
   let fireworks_enabled = false;
   reset_amount(total_amount);
 
-  function shuffle(a: Array<string>) {
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
-
   function generate_all_persons() {
     let all_persons = [];
-    let total_m = 9;
-    for (let i = 0; i < total_m; i++) {
-      let src = "./persons/m_" + i + ".png";
+    let total = 22;
+    for (let i = 0; i < total; i++) {
+      let src = "./persons/" + i + ".png";
       all_persons.push({ src: src, id: i, z: 0 });
     }
-    let total_w = 14;
-    for (let i = 0; i < total_w; i++) {
-      let src = "./persons/w_" + i + ".png";
-      all_persons.push({ src: src, id: total_m + i, z:0 });
-    }
-    all_persons = shuffle(all_persons);
-    current_person = all_persons.pop();
     return all_persons;
   }
 
@@ -96,20 +102,21 @@
     persons_outside = generate_all_persons();
     persons_left = [];
     for (let i = 0; i < 5; i++) {
-      persons_left.push(persons_outside.pop());
+      persons_left.push(persons_outside.shift());
     }
     for (let i = 0; i < num_completed; i++) {
       console.log("Reset: adding person");
-      let p_to_right = persons_left.pop();
-      let p_to_left = persons_outside.pop();
+      let p_to_right = persons_left.shift();
+      let p_to_left = persons_outside.shift();
       persons_left.push(p_to_left);
       persons_right.push(p_to_right);
     }
+    current_person = persons_left.shift();
     person_showing = true;
     path_progress = tweened((total_amount - amount_completed) / 3000, {
       duration: (start, stop) =>
         (Math.sqrt(Math.abs(stop - start)) * 12000) / ANIMATION_SPEEDUP,
-    easing: path_easing ,
+      easing: path_easing,
     });
   }
 
@@ -121,7 +128,7 @@
       await add_person_top();
       to_be_animated -= 3000;
     }
-    path_progress.set(to_be_animated / 3000);
+    await path_progress.set(to_be_animated / 3000);
   }
   async function add_person_top() {
     await path_progress.set(1);
@@ -130,12 +137,14 @@
     person_showing = false;
     fireworks_enabled = true;
     crossfade_animating_stop = false;
-    let z_on_right: number[] = persons_right.map((person) => {return person.z});
+    let z_on_right: number[] = persons_right.map((person) => {
+      return person.z;
+    });
     let topmost_z = Math.max(0, ...z_on_right);
-    console.log(topmost_z)
-    console.log(current_person)
+    console.log(topmost_z);
+    console.log(current_person);
     current_person.z = topmost_z + 1;
-    console.log(current_person)
+    console.log(current_person);
     persons_right = persons_right.concat(current_person);
     await sleep(CROSSFADE_MS);
     crossfade_animating_stop = false;
@@ -175,7 +184,7 @@
       style: "currency",
       currency: "CHF",
       maximumFractionDigits: 0,
-    })
+    });
   }
 
   import { quintOut } from "svelte/easing";
@@ -214,7 +223,12 @@
   <div class="track-container">
     <div class="persons uncompleted">
       {#each persons_left as person (person.id)}
-        <div class="small-person" out:send={{ key: person.id }} animate:flip in:fly="{{ y: -100, duration: 500 }}">
+        <div
+          class="small-person"
+          out:send={{ key: person.id }}
+          animate:flip
+          in:fly={{ y: -100, duration: 500 }}
+        >
           <img src={person.src} alt="Foto" />
         </div>
       {/each}
@@ -378,6 +392,8 @@
     margin-left: 70px;
   }
   .persons.uncompleted {
+    justify-content: flex-start;
+    flex-direction: column-reverse;
     margin-bottom: 100px;
     margin-right: 70px;
   }
@@ -388,6 +404,14 @@
   .small-person img {
     width: 100px;
     height: 100px;
+    border-radius: 50%;
+    object-fit: contain;
+    outline: 5px solid #dadada;
+    outline-offset: -5px;
+  }
+  .completed .small-person img {
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     object-fit: contain;
     outline: 5px solid #dadada;
