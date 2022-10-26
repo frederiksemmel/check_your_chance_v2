@@ -8,28 +8,37 @@
   import { fly } from "svelte/transition";
 
   // get from websocket
-  
+
   let tween_running = false;
-  
-  const socket = new WebSocket("ws://127.0.0.1:8765");
-  socket.addEventListener("message", async (message) => {
-    let json = JSON.parse(message.data);
-    console.log(json);
-    let total_amount = json.total_amount;
-    if (json.reset) {
-      reset_amount(total_amount);
-    } else if (!tween_running) {
-      console.log("Setting amount from ws")
-      tween_running = true;
-      console.log("setting true")
-      await set_amount(total_amount);
-      console.log("setting false")
-      tween_running = false;
-    }
-    else if (tween_running) {
-      console.log("Tween is running, ignoring message")
-    }
-  });
+
+  function connect() {
+    var socket = new WebSocket("ws://127.0.0.1:8765");
+    socket.onclose = function () {
+      console.log("Connection closed, reconnecting");
+      setTimeout(function () {
+        connect();
+      }, 2000);
+    };
+    socket.addEventListener("message", async (message) => {
+      let json = JSON.parse(message.data);
+      console.log(json);
+      let total_amount = json.total_amount;
+      if (json.reset) {
+        reset_amount(total_amount);
+      } else if (!tween_running) {
+        console.log("Setting amount from ws");
+        tween_running = true;
+        console.log("setting true");
+        await set_amount(total_amount);
+        console.log("setting false");
+        tween_running = false;
+      } else if (tween_running) {
+        console.log("Tween is running, ignoring message");
+      }
+    });
+    return socket;
+  }
+  connect();
 
   const ANIMATION_SPEEDUP = 0.7;
   const CROSSFADE_MS = 1500;
@@ -78,12 +87,12 @@
   let persons_outside = [];
   let persons_right = [];
   let persons_left = [];
-  let current_person: { src: string; id: number; z: number };
+  let current_person: { src: string; id: number; z: number } = { src: "./persons/0.png", id: 0, z: 0};
   let person_showing = true;
   let crossfade_animating_start = false;
   let crossfade_animating_stop = false;
   let fireworks_enabled = false;
-  reset_amount(total_amount);
+  // reset_amount(total_amount);
 
   function generate_all_persons() {
     let all_persons = [];
@@ -108,7 +117,9 @@
       console.log("Reset: adding person");
       let p_to_right = persons_left.shift();
       let p_to_left = persons_outside.shift();
-      persons_left.push(p_to_left);
+      if (p_to_left != undefined) {
+        persons_left.push(p_to_left);
+      }
       persons_right.push(p_to_right);
     }
     current_person = persons_left.shift();
@@ -137,14 +148,6 @@
     person_showing = false;
     fireworks_enabled = true;
     crossfade_animating_stop = false;
-    let z_on_right: number[] = persons_right.map((person) => {
-      return person.z;
-    });
-    let topmost_z = Math.max(0, ...z_on_right);
-    console.log(topmost_z);
-    console.log(current_person);
-    current_person.z = topmost_z + 1;
-    console.log(current_person);
     persons_right = persons_right.concat(current_person);
     await sleep(CROSSFADE_MS);
     crossfade_animating_stop = false;
@@ -155,7 +158,7 @@
     amount_completed += 3000;
     await path_progress.set(0, { duration: 0 });
     await sleep(1000 / ANIMATION_SPEEDUP);
-    current_person = persons_left.pop();
+    current_person = persons_left.shift();
     persons_left = persons_left;
     crossfade_animating_start = true;
     await sleep(CROSSFADE_MS);
@@ -166,8 +169,10 @@
     // New: move person from outside to left
     // TODO refactor this function
     // TODO handle case of no more persons gracefully
-    let person_to_left = persons_outside.pop();
-    persons_left = [person_to_left].concat(persons_left);
+    let p_to_left = persons_outside.shift();
+      if (p_to_left != undefined) {
+        persons_left = persons_left.concat(p_to_left);
+      }
   }
 
   $: set_amount(total_amount);
@@ -178,8 +183,6 @@
   $: text_path = visualize_amount(Math.min($path_progress, 1) * 3000);
 
   function visualize_amount(amount: number) {
-    let thousands = Math.floor(amount / 1000);
-    let rest = Math.round(amount - 1000 * thousands);
     return amount.toLocaleString("de-CH", {
       style: "currency",
       currency: "CHF",
@@ -286,19 +289,6 @@
 
   <FireworksCYC enabled={fireworks_enabled} />
 
-  <input
-    type="range"
-    style="width:1000px;height:20px;"
-    bind:value={total_amount}
-    min="0.0"
-    step="50"
-    max="20000"
-  />
-  <button on:click={() => (fireworks_enabled = !fireworks_enabled)} class="btn">
-    {fireworks_enabled ? "Enabled" : "Disabled"}
-  </button>
-
-  <button on:click={add_person_top} class="btn"> Add to top </button>
 </main>
 
 <style>
@@ -396,6 +386,7 @@
     flex-direction: column-reverse;
     margin-bottom: 100px;
     margin-right: 70px;
+    height: 733px;
   }
   .small-person {
     z-index: 1;
